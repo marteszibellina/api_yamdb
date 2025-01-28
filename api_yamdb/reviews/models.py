@@ -1,6 +1,9 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from .constants import MAX_TEXT_LENGTH, MAX_COMMENT_LENGTH
+from .constants import (MAX_TEXT_LENGTH,
+                        MAX_COMMENT_LENGTH,
+                        MAX_SCORE, MIN_SCORE)
 
 # Create your models here.
 # Ресурсы API YaMDb
@@ -62,17 +65,35 @@ class Reviews(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Название'
     )
-    author = models.ForeignKey(
-        'users.User',
-        on_delete=models.CASCADE,
-        verbose_name='Автор'
+    # Временная модель автора, пока не реализована модель пользователей
+    author = models.IntegerField('ID автора')
+
+    # author = models.ForeignKey(
+    #     'users.User',
+    #     on_delete=models.CASCADE,
+    #     verbose_name='Автор'
+    # )
+
+    score = models.PositiveSmallIntegerField(
+        "Оценка",
+        validators=[
+            MaxValueValidator(
+                MAX_SCORE, message=f"Оценка не может быть больше {MAX_SCORE}"
+            ),
+            MinValueValidator(
+                MIN_SCORE, message=f"Оценка не может быть меньше {MIN_SCORE}"
+            ),
+        ],
     )
-    score = models.PositiveSmallIntegerField('Оценка')
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
     class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
+
+    def __str__(self):
+        """Возвращает текст отзыва."""
+        return self.text
 
 
 class Comments(models.Model):
@@ -84,13 +105,21 @@ class Comments(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Отзыв'
     )
-    author = models.ForeignKey(
-        'users.User',
-        on_delete=models.CASCADE,
-        verbose_name='Автор комментария'
-    )
+    # Временная модель автора, пока не реализована модель пользователей
+    author = models.IntegerField('ID автора комментария')
+
+    # author = models.ForeignKey(
+    #     'users.User',
+    #     on_delete=models.CASCADE,
+    #     verbose_name='Автор комментария'
+    # )
+
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
     class Meta:
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
+
+    def __str__(self):
+        """Возвращает текст комментария."""
+        return self.text
