@@ -1,6 +1,6 @@
 from django.db import models
 
-from consts import MAX_COMMENT_LENGTH, MAX_TEXT_LENGTH
+from .constants import MAX_TEXT_LENGTH, MAX_COMMENT_LENGTH
 
 # Create your models here.
 # Ресурсы API YaMDb
