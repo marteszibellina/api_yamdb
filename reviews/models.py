@@ -12,22 +12,30 @@ from .constants import (MAX_TEXT_LENGTH,
 
 
 class Category(models.Model):
+    """Модель категорий."""
+
     name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True, max_length=50)
 
     def __str__(self):
+        """Возвращает текст категории."""
         return self.slug
 
 
 class Genre(models.Model):
+    """Модель жанров."""
+
     name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True, max_length=50)
 
     def __str__(self):
+        """Возвращает текст жанра."""
         return self.slug
 
 
 class Title(models.Model):
+    """Модель произведений."""
+
     name = models.CharField(max_length=256)
     year = models.IntegerField()
     description = models.TextField()
@@ -39,6 +47,8 @@ class Title(models.Model):
 
 
 class GenreTitle(models.Model):
+    """Модель жанров и произведений (многие ко многим)."""
+
     genre = models.ForeignKey(
         Genre, on_delete=models.CASCADE,
     )
@@ -81,7 +91,15 @@ class Reviews(models.Model):
     class Meta:
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
-
+        constraints = [
+            # Проверка уникальности отзыва на уровне БД
+            # на случай, если будут параллельные запросы или ошибке в логике
+            # самого приложения
+            models.UniqueConstraint(
+                fields=['title', 'author'],
+                name='unique_review'
+            )
+        ]
     def __str__(self):
         """Возвращает текст отзыва."""
         return self.text
