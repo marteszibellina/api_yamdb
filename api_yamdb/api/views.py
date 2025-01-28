@@ -8,7 +8,7 @@ from rest_framework import viewsets, permissions, filters, pagination, mixins
 
 from reviews.models import Category, Genre, Title
 from .serializers import (
-    CategorySerializer, GenreSerializer, TitleSerializer
+    CategorySerializer, GenreSerializer, TitleSerializer, TitleReadSerializer
 )
 
 
@@ -25,3 +25,8 @@ class GenreViewSet(viewsets.ModelViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
+
+    def get_serializer(self):
+        if self.action in ('list', 'retrieve'):
+            return TitleReadSerializer
+        return TitleSerializer
