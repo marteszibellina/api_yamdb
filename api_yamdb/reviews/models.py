@@ -5,16 +5,10 @@ from .constants import (MAX_TEXT_LENGTH,
                         MAX_COMMENT_LENGTH,
                         MAX_SCORE, MIN_SCORE)
 
-# Create your models here.
-# Ресурсы API YaMDb
-
 
 # Ресурс auth: аутентификация.
 
 # Ресурс users: пользователи.
-
-# Ресурс categories: категории (типы) произведений («Фильмы», «Книги», «Музыка»).
-# Одно произведение может быть привязано только к одной категории.
 
 
 class Category(models.Model):
@@ -24,8 +18,6 @@ class Category(models.Model):
     def __str__(self):
         return self.slug
 
-# Ресурс genres: жанры произведений. Одно произведение может быть привязано к нескольким жанрам.
-
 
 class Genre(models.Model):
     name = models.CharField(max_length=256)
@@ -33,7 +25,6 @@ class Genre(models.Model):
 
     def __str__(self):
         return self.slug
-# Ресурс titles: произведения, к которым пишут отзывы (определённый фильм, книга или песенка).
 
 
 class Title(models.Model):
