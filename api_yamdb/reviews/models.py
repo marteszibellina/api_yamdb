@@ -1,5 +1,7 @@
 from django.db import models
 
+from .constants import MAX_TEXT_LENGTH, MAX_COMMENT_LENGTH
+
 # Create your models here.
 # Ресурсы API YaMDb
 
@@ -50,6 +52,45 @@ class GenreTitle(models.Model):
         Title, on_delete=models.CASCADE
     )
 
-# Ресурс reviews: отзывы на произведения. Отзыв привязан к определённому произведению.
 
-# Ресурс comments: комментарии к отзывам. Комментарий привязан к определённому отзыву.
+class Reviews(models.Model):
+    """Модель отзывов."""
+
+    text = models.TextField('Текст', max_length=MAX_TEXT_LENGTH)
+    title = models.ForeignKey(
+        'titles.Title',
+        on_delete=models.CASCADE,
+        verbose_name='Название'
+    )
+    author = models.ForeignKey(
+        'users.User',
+        on_delete=models.CASCADE,
+        verbose_name='Автор'
+    )
+    score = models.PositiveSmallIntegerField('Оценка')
+    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
+
+
+class Comments(models.Model):
+    """Модель комментариев."""
+
+    text = models.TextField('Текст', max_length=MAX_COMMENT_LENGTH)
+    review = models.ForeignKey(
+        'reviews.Reviews',
+        on_delete=models.CASCADE,
+        verbose_name='Отзыв'
+    )
+    author = models.ForeignKey(
+        'users.User',
+        on_delete=models.CASCADE,
+        verbose_name='Автор комментария'
+    )
+    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
