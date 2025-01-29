@@ -4,7 +4,7 @@ from django.core.mail import send_mail
 
 
 def send_code(user):
-
+    """Функция отправки кода подтверждения на почту пользователя."""
     code = str(randint(111111, 999999))
     send_mail(
         subject='Код подтверждения',
