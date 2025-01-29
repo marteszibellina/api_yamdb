@@ -1,16 +1,15 @@
-from django.shortcuts import render
-
-# Create your views here.
-
-
-from django.shortcuts import get_object_or_404
+from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework import viewsets, permissions, filters, pagination, mixins
 
 from reviews.models import Category, Genre, Title, Comments, Reviews
 
 from .serializers import (
-    CategorySerializer, GenreSerializer, TitleSerializer, TitleReadSerializer
+    CategorySerializer,
+    CommentSerializer, ReviewSerializer,
+    GenreSerializer, TitleSerializer, TitleReadSerializer
 )
+from .permissions import IsAuthorOrReadOnly, IsAdminOrModerator
 
 
 class CategoryViewSet(
@@ -48,19 +47,35 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleSerializer
 
 
-class CommentSerializer(serializers.ModelSerializer):
-    """Сериализатор комментариев."""
+class ReviewViewSet(viewsets.ModelViewSet):
+    """Вьюсет для отзывов"""
 
-    class Meta:
-        model = Comments
-        fields = ('id', 'text', 'author', 'pub_date')
-        read_only_fields = ('author', 'pub_date')  # пока только для чтения
+    queryset = Reviews.objects.all()
+    serializer_class = ReviewSerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly | IsAdminOrModerator)
+
+    def perform_create(self, serializer):
+        """Создание отзыва с автоматическим созданием автора."""
+        # Проверка уникальности отзыва на уровне логики вьюсета
+        # Находим название произведения
+        title = serializer.validated_data['title']
+        # Проверяем, что пользователь не оставлял отзыв на это произведение
+        if Reviews.objects.filter(title=title,
+                                  author=self.request.user).exists():
+            # Если пользователь уже оставлял отзыв, то возвращаем ошибку
+            raise ValidationError('Вы уже оставляли отзыв на это произведение')
+        serializer.save(author=self.request.user)
 
 
-class ReviewSerializer(serializers.ModelSerializer):
-    """Сериализатор отзывов."""
+class CommentViewSet(viewsets.ModelViewSet):
+    """Вьюсет для комментариев"""
 
-    class Meta:
-        model = Reviews
-        fields = ('id', 'text', 'author', 'score', 'pub_date')
-        read_only_fields = ('author', 'pub_date')  # пока только для чтения
+    queryset = Comments.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly | IsAdminOrModerator)
+
+    def perform_create(self, serializer):
+        """Создание комментария с автоматическим созданием автора."""
+        serializer.save(author=self.request.user)
