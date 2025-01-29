@@ -1,50 +1,12 @@
+"""Вьюсеты для моделей отзывов и комментариев."""
+
+from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework import viewsets, permissions, filters, pagination, mixins
 
-from reviews.models import Category, Genre, Title, Comments, Reviews
-
-from .serializers import (
-    CategorySerializer,
-    CommentSerializer, ReviewSerializer,
-    GenreSerializer, TitleSerializer, TitleReadSerializer
-)
+from .models import Comments, Reviews
+from .serializers import CommentSerializer, ReviewSerializer
 from .permissions import IsAuthorOrReadOnly, IsAdminOrModerator
-
-
-class CategoryViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
-):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-
-
-class GenreViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
-):
-    queryset = Genre.objects.all()
-    serializer_class = GenreSerializer
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
-
-
-class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
-
-    def get_serializer(self):
-        if self.action in ('list', 'retrieve'):
-            return TitleReadSerializer
-        return TitleSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
