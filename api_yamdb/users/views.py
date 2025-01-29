@@ -33,12 +33,6 @@ class SignUpViewSet(viewsets.ModelViewSet):
     permission_classes = (AllowAny,)
 
 
-class GetTokenViewSet():
-    pass
-#     serializer_class = ConfirmationCodeSerializer
-#     permission_classes = (AllowAny,)
-
-
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def get_token(request):

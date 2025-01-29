@@ -1,6 +1,9 @@
+# from users.models import CustomUser
+
 from pathlib import Path
 
 from datetime import timedelta
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -24,9 +27,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
-    'api.apps.ApiConfig',
-    'review.apps.ReviewConfig',
     'users.apps.UsersConfig',
+    'api',
+    'reviews',
 ]
 
 MIDDLEWARE = [
