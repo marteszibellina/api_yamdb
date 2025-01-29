@@ -1,19 +1,13 @@
+import re
+
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxLengthValidator
 from django.db import models
 
-from .constants import NAME_MAX_LENGTH, EMAIL_MAX_LENGTH
-
-
-ADMIN = 'admin'
-MODERATOR = 'moderator'
-USER = 'user'
-ROLES = [
-    (ADMIN, 'администратор'),
-    (MODERATOR, 'модератор'),
-    (USER, 'пользователь')
-]
+from .constants import (
+    NAME_MAX_LENGTH, EMAIL_MAX_LENGTH, ADMIN, MODERATOR, USER, ROLES
+)
 
 
 def validate_username(username):
@@ -22,12 +16,14 @@ def validate_username(username):
         raise ValidationError(
             'Невозможно использовать "me" в качестве никнейма.'
         )
+    if not re.fullmatch(r'^[\w\d\.@+-]+$', username):
+        raise ValidationError(
+            'Никнейм содержит недопустимые символы.'
+        )
     if len(username) > NAME_MAX_LENGTH:
         raise ValidationError(
             f'Никнейм не может превышать {NAME_MAX_LENGTH} символов.'
         )
-    # Позже здесь будет еще одна проверка
-    # на соответствие паттерну ^[\\w.@+-]+\\Z'
     return username
 
 
