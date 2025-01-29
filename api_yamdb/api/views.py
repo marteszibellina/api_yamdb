@@ -6,7 +6,8 @@ from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, filters, pagination, mixins
 
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, Genre, Title, Comments, Reviews
+
 from .serializers import (
     CategorySerializer, GenreSerializer, TitleSerializer, TitleReadSerializer
 )
@@ -45,3 +46,21 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.action in ('list', 'retrieve'):
             return TitleReadSerializer
         return TitleSerializer
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор комментариев."""
+
+    class Meta:
+        model = Comments
+        fields = ('id', 'text', 'author', 'pub_date')
+        read_only_fields = ('author', 'pub_date')  # пока только для чтения
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор отзывов."""
+
+    class Meta:
+        model = Reviews
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        read_only_fields = ('author', 'pub_date')  # пока только для чтения
