@@ -1,7 +1,7 @@
 """Сериализаторы моделей отзывов и комментариев."""
 
 from rest_framework import serializers
-from .models import Comments, Reviews
+from reviews.models import Comments, Reviews
 
 
 class CommentSerializer(serializers.ModelSerializer):
