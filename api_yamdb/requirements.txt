@@ -22,10 +22,5 @@ requests==2.26.0
 sqlparse==0.5.3
 toml==0.10.2
 typing_extensions==4.12.2
-urllib3==1.26.20
-pytz==2024.2
-requests==2.26.0
-sqlparse==0.5.3
-toml==0.10.2
-typing_extensions==4.12.2
+tzdata==2025.1
 urllib3==1.26.20

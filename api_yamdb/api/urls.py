@@ -1,6 +1,7 @@
 from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from django.urls import include, path
+from rest_framework import routers
 
 from users.views import (SignUpViewSet, TokenObtainPairView, UserViewSet,
                          UserMeViewSet)
