@@ -1,8 +1,9 @@
-from rest_framework import permissions
+from rest_framework.permissions import BasePermission
 
 
-class IsAdminOrSuperuser(permissions.BasePermission):
-    """Удостоверяемся, что пользователь является админом или суперюзером."""
+class IsAdminOrSuperuser(BasePermission):
+    """Разрешение для администраторов и суперпользователей."""
 
     def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.is_admin
+        return request.user.is_authenticated and (
+            request.user.is_admin or request.user.is_superuser)

@@ -1,14 +1,24 @@
-"""Валидаторы. Созданы отдельно на всякий случай"""
 import re
 from django.core.exceptions import ValidationError
+from .constants import NAME_MAX_LENGTH, EMAIL_MAX_LENGTH
 
 
 def validate_username(value):
-    """Проверка на уникальность username."""
-
-    pattern = r'^[\w.@+-]+$'
-    if not re.match(pattern, value):
+    """Проверка username."""
+    if len(value) > NAME_MAX_LENGTH:
+        raise ValidationError('Имя пользователя слишком длинное.')
+    if value.lower() == 'me':
+        raise ValidationError('Имя "me" запрещено.')
+    if not re.match(r'^[\w.@+-]+$', value):
         raise ValidationError(
             'Имя пользователя содержит недопустимые символы.')
+    return value
 
+
+def validate_email(value):
+    """Проверка email."""
+    from .models import User  # ленивый импорт
+
+    if len(value) > EMAIL_MAX_LENGTH:
+        raise ValidationError('Email слишком длинный.')
     return value

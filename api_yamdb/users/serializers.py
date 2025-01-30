@@ -1,28 +1,17 @@
 from rest_framework import serializers
-
 from .models import User
+from .validators import validate_email, validate_username
 
 
 class SignUpSerializer(serializers.ModelSerializer):
-    """Сериализатор для регистрации пользователей."""
+    """Сериализатор для регистрации пользователей."""
+
+    email = serializers.EmailField(validators=[validate_email])
+    username = serializers.CharField(validators=[validate_username])
 
     class Meta:
         model = User
         fields = ('email', 'username')
-
-    def validate_email(self, value):
-        """Проверка на уникальность email."""
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError(
-                'Пользователь с таким email уже существует')
-        return value
-
-    def validate_username(self, value):
-        """Проверка на уникальность username."""
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError(
-                'Пользователь с таким username уже существует')
-        return value
 
 
 class UserSerializer(serializers.ModelSerializer):
