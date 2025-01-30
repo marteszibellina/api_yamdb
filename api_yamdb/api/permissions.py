@@ -14,7 +14,8 @@ class IsAdminOrReadOnly(BasePermission):
             )
         )
 
-class IsAdminModeratorOwnerOrReadOnly(BasePermission):
+
+class IsAuthorAdminModeratorOrReadOnly(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         if (

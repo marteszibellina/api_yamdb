@@ -9,7 +9,7 @@ from .serializers import (
     CommentSerializer, ReviewSerializer,
     GenreSerializer, TitleSerializer, TitleReadSerializer
 )
-from .permissions import IsAdminOrReadOnly, IsAdminModeratorOwnerOrReadOnly
+from .permissions import IsAdminOrReadOnly, IsAuthorAdminModeratorOrReadOnly
 
 
 class CategoryViewSet(
@@ -61,7 +61,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (
         IsAuthenticatedOrReadOnly,
-        IsAdminModeratorOwnerOrReadOnly
+        IsAuthorAdminModeratorOrReadOnly
     )
     http_method_names = ('delete', 'get', 'patch', 'post')
 
@@ -88,15 +88,14 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (
         IsAuthenticatedOrReadOnly,
-        IsAdminModeratorOwnerOrReadOnly
+        IsAuthorAdminModeratorOrReadOnly
     )
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_review(self):
         return get_object_or_404(
             Reviews,
-            pk=self.kwargs.get('title_id'),
-            title__id=self.kwargs.get('reviews_id')
+            pk=self.kwargs.get('review_id')
         )
 
     def get_queryset(self):
@@ -104,6 +103,6 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(
-            author=self.request.user,
             review=self.get_review(),
+            author=self.request.user
         )
