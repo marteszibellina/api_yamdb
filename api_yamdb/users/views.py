@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import filters, status, viewsets, permissions
+from rest_framework import status, viewsets, permissions
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -14,7 +14,8 @@ from .models import User
 from .paginators import UserPagination
 from .serializers import SignUpSerializer, UserSerializer
 from .utils import send_confirmation_email
-from .permissions import IsAdminOrSuperuser
+from .permissions import IsAdminOrSuperuser, IsUser
+
 
 
 class SignUpViewSet(viewsets.ViewSet):
@@ -121,26 +122,17 @@ class TokenObtainPairView(viewsets.ViewSet):
         return Response(token_serializer.errors,
                         status=status.HTTP_400_BAD_REQUEST)
 
+    def retrieve(self, request):
+        """Метод для получения токена через GET."""
+        username = request.query_params.get('username')
+        confirmation_code = request.query_params.get('confirmation_code')
 
-class ConfirmEmailView(viewsets.ViewSet):
-    """Вьюсет для подтверждения email."""
-
-    permission_classes = (permissions.AllowAny,)
-
-    def create(self, request):
-        """Метод для подтверждения email."""
-        # Получаем данные из запроса
-        username = request.data.get('username')
-        confirmation_code = request.data.get('confirmation_code')
-
-        # Проверяем, что данные не пусты
         if not username or not confirmation_code:
             return Response(
                 {'error': 'Требуются username и confirmation_code'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Проверяем, что пользователь с таким именем существует
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
@@ -149,29 +141,30 @@ class ConfirmEmailView(viewsets.ViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Проверяем, что код подтверждения совпадает
         if user.confirmation_code != confirmation_code:
             return Response(
                 {'error': 'Неверный код подтверждения'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Если данные верны, генерируем токен
-        refresh = RefreshToken.for_user(user)
-        access_token = str(refresh.access_token)
-        refresh_token = str(refresh)
+        token_serializer = TokenObtainPairSerializer(
+            data={'username': username, 'password': ''})
 
-        return Response(
-            {'access': access_token, 'refresh': refresh_token},
-            status=status.HTTP_200_OK
-        )
+        if token_serializer.is_valid():
+            user.confirmation_code = ''
+            user.save(update_fields=['confirmation_code'])
+            return Response(token_serializer.validated_data,
+                            status=status.HTTP_200_OK)
+
+        return Response(token_serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserMeViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с пользователем /me."""
 
     # Права доступа есть только у авторизированных.
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (IsAdminOrSuperuser, IsUser)
 
     def retrieve(self, request):
         """Метод для получения информации о пользователе."""
