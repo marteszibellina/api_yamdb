@@ -2,14 +2,12 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from users.models import User
-
 from .constants import (MAX_TEXT_LENGTH,
                         MAX_COMMENT_LENGTH,
-                        MAX_SCORE, MIN_SCORE)
-from .validators import validate_year
+                        MAX_SCORE, MIN_SCORE,
+                        MAX_NAME_LENGTH, MAX_SLUG_LENGTH)
 
-# Ресурс auth: аутентификация.
+User = get_user_model()
 
 
 class Category(models.Model):
@@ -53,14 +51,16 @@ class Genre(models.Model):
 class Title(models.Model):
     """Модель произведений."""
 
-    name = models.CharField(max_length=256)
-    year = models.IntegerField(validators=[validate_year])
-    description = models.TextField(
-        max_length=255,
-        null=True,
-        blank=True,
+    name = models.CharField(
+        max_length=MAX_NAME_LENGTH, verbose_name='Название'
     )
-    genre = models.ManyToManyField(Genre, through='GenreTitle')
+    year = models.IntegerField(
+        verbose_name='Год выпуска',
+    )
+    description = models.TextField(blank=True, verbose_name='Описание')
+    genre = models.ManyToManyField(
+        Genre, through='GenreTitle', verbose_name='Жанр'
+    )
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL,
         null=True
@@ -68,8 +68,8 @@ class Title(models.Model):
 
     class Meta:
         ordering = ('name',)
-        verbose_name = 'Title'
-        verbose_name_plural = 'Titles'
+        verbose_name = 'Произведение'
+        verbose_name_plural = 'Произведения'
 
     def __str__(self):
         return self.name
@@ -104,15 +104,14 @@ class Reviews(models.Model):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        verbose_name='Название'
+        related_name='reviews',
+        verbose_name='Произведение'
     )
-    # Временная модель автора, пока не реализована модель пользователей
-    # author = models.IntegerField('ID автора')
-
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        verbose_name='Автор'
+        related_name='reviews',
+        verbose_name='Автор',
     )
 
     score = models.PositiveSmallIntegerField(
@@ -144,6 +143,7 @@ class Reviews(models.Model):
                 name='unique_review'
             )
         ]
+        ordering = ('pub_date',)
 
     def __str__(self):
         """Возвращает текст отзыва."""
@@ -164,16 +164,16 @@ class Comments(models.Model):
         related_name='comments',
         verbose_name='Отзыв'
     )
-    # Временная модель автора, пока не реализована модель пользователей
-    # author = models.IntegerField('ID автора комментария')
-
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        verbose_name='Автор комментария'
+        related_name='comments',
+        verbose_name='Автор',
     )
-
-    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата публикации комментария'
+    )
 
     class Meta:
         verbose_name = 'Комментарий'

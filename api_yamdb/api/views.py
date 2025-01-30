@@ -1,22 +1,15 @@
-from django.db.models import Avg
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework import permissions
-from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
-
-from rest_framework.pagination import LimitOffsetPagination, PageNumberPagination
-from rest_framework import viewsets, permissions, filters, pagination, mixins
+from rest_framework.generics import get_object_or_404
+from rest_framework import viewsets, filters, pagination, mixins
 
 from reviews.models import Category, Genre, Title, Comments, Reviews
 
-from .filters import TitleFilter
 from .serializers import (
     CategorySerializer,
     CommentSerializer, ReviewSerializer,
     GenreSerializer, TitleSerializer, TitleReadSerializer
 )
-from .permissions import IsAuthorOrReadOnly, IsAdminOrModerator, IsAdminOrSuperuserOrReadOnly
+from .permissions import IsAdminOrReadOnly, IsAdminModeratorOwnerOrReadOnly
 
 
 class CategoryViewSet(
@@ -27,8 +20,7 @@ class CategoryViewSet(
 ):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminOrSuperuserOrReadOnly, )
-    pagination_class = LimitOffsetPagination
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -42,30 +34,24 @@ class GenreViewSet(
 ):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    pagination_class = LimitOffsetPagination
-    permission_classes = (IsAdminOrSuperuserOrReadOnly, )
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """Вьюсет модели Title."""
+
     queryset = Title.objects.all()
-    permission_classes = (IsAdminOrSuperuserOrReadOnly, )
-    filter_backends = (DjangoFilterBackend,)
-    filterset_class = TitleFilter
-    
-    def get_serializer(self):
+    serializer_class = TitleSerializer
+    permission_classes = (IsAdminOrReadOnly,)
+    http_method_names = ('get', 'post', 'patch', 'delete')
+
+    def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
             return TitleReadSerializer
         return TitleSerializer
-    
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        avg = Reviews.objects.filter(title=instance).aggregate(Avg('score'))
-        instance.rating = avg['score__avg']
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -117,5 +103,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         return self.get_review().comments.all()
 
     def perform_create(self, serializer):
-        """Создание комментария с автоматическим созданием автора."""
-        serializer.save(author=self.request.user)
+        serializer.save(
+            author=self.request.user,
+            review=self.get_review(),
+        )

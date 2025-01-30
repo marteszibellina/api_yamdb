@@ -3,11 +3,13 @@ from random import randint
 from django.core.mail import send_mail
 
 
-def send_confirmation_email(email, code):
-    """Отправка кода подтверждения."""
+def send_code(user):
+    """Функция отправки кода подтверждения на почту пользователя."""
     code = str(randint(111111, 999999))
-    subject = 'Код подтверждения для YaMDB'
-    message = f'Ваш код подтверждения: {code}'
-    from_email = 'noreply@yamdb.com'
-    recipient_list = [email]
-    send_mail(subject, message, from_email, recipient_list)
+    send_mail(
+        subject='Код подтверждения',
+        message=f'Вы получили код подтверждения: {code}',
+        from_email=['admin@yamdb.ru'],
+        recipient_list=[user.email],
+        fail_silently=True,
+    )

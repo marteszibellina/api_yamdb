@@ -1,88 +1,45 @@
-import secrets
-
-from django.db import IntegrityError
-
-from rest_framework import status, viewsets, permissions
-
-from rest_framework.permissions import IsAdminUser
+from django.contrib.auth import get_user_model
+# from rest_framework.decorators import action
+from rest_framework import viewsets
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework import permissions, status
+from rest_framework.decorators import api_view, permission_classes
+# from rest_framework_simplejwt.tokens import RefreshToken
+from django.shortcuts import get_object_or_404
 
-from .models import User
-from .serializers import SignUpSerializer, UserSerializer
-from .utils import send_confirmation_email
+from .permissions import IsAdminOrSuperuser
+from .serializers import (
+    CustomUserSerializer,
+    SignUpSerializer,
+    ConfirmationCodeSerializer
+)
+
+
+User = get_user_model()
+
+
+class CustomUserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = CustomUserSerializer
+    permission_classes = (IsAdminOrSuperuser,)
 
 
 class SignUpViewSet(viewsets.ModelViewSet):
-    """Вьюсет для регистрации пользователей."""
-
-    def create(self, request):
-        """Регистрация нового пользователя."""
-        serializer = SignUpSerializer(data=request.data)
-        if serializer.is_valid():
-            try:
-                # Создаем пользователя и отправляем код подтверждения
-                user = serializer.save()
-                user.confirmation_code = secrets.token_hex(16)
-                user.save()
-                send_confirmation_email(user.email, user.confirmation_code)
-            # Если пользователь с таким email уже существует
-            except IntegrityError as error:
-                return Response(
-                    f'{error}: Пользователь с таким email уже существует',
-                    status=status.HTTP_400_BAD_REQUEST)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-class CustomTokenObtainPairView(viewsets.ModelViewSet):
-    """Вьюсет для получения токена."""
-
-    def create(self, request):
-        """Получение токена."""
-        username = request.data.get('username')
-        confirmation_code = request.data.get('confirmation_code')
-        try:
-            User.objects.get(username=username,
-                             confirmation_code=confirmation_code)
-        except User.DoesNotExist:
-            return Response('Неверные данные',
-                            status=status.HTTP_400_BAD_REQUEST)
-        return TokenObtainPairView.as_view()(request)
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    """Вьюсет для работы с пользователями."""
-
     queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = (IsAdminUser,)
-
-    def create(self, request, *args, **kwargs):
-        try:
-            return super().create(request, *args, **kwargs)
-        except IntegrityError as error:
-            return Response(
-                f'{error}: Пользователь с таким username уже существует',
-                status=status.HTTP_400_BAD_REQUEST)
+    serializer_class = SignUpSerializer
+    permission_classes = (AllowAny,)
 
 
-class UserMeViewSet(viewsets.ModelViewSet):
-    """Вьюсет для работы с текущим пользователем."""
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def get_token(request):
+    """Функция для получения токена"""
 
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def retrieve(self, request):
-        """Получение информации о текущем пользователе."""
-        serializer = UserSerializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def partial_update(self, request):
-        """Обновление информации о текущем пользователе."""
-        serializer = UserSerializer(
-            request.user,
-            data=request.data,
-            partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer = ConfirmationCodeSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.validated_data["username"]
+    user = get_object_or_404(User, username=username)
+    token = AccessToken.for_user(user)
+    return Response({'token': str(token)}, status=status.HTTP_200_OK)
