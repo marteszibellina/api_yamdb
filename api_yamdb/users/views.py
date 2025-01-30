@@ -1,13 +1,17 @@
 import secrets
 
-from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 
-from rest_framework import status, viewsets, permissions
+from django_filters.rest_framework import DjangoFilterBackend
+
+from rest_framework import filters, status, viewsets, permissions
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 
+from .filters import UserFilter
 from .models import User
+from .paginators import UserPagination
 from .serializers import SignUpSerializer, UserSerializer
 from .utils import send_confirmation_email
 from .permissions import IsAdminOrSuperuser
@@ -118,6 +122,51 @@ class TokenObtainPairView(viewsets.ViewSet):
                         status=status.HTTP_400_BAD_REQUEST)
 
 
+class ConfirmEmailView(viewsets.ViewSet):
+    """Вьюсет для подтверждения email."""
+
+    permission_classes = (permissions.AllowAny,)
+
+    def create(self, request):
+        """Метод для подтверждения email."""
+        # Получаем данные из запроса
+        username = request.data.get('username')
+        confirmation_code = request.data.get('confirmation_code')
+
+        # Проверяем, что данные не пусты
+        if not username or not confirmation_code:
+            return Response(
+                {'error': 'Требуются username и confirmation_code'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Проверяем, что пользователь с таким именем существует
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'Неверные учетные данные'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Проверяем, что код подтверждения совпадает
+        if user.confirmation_code != confirmation_code:
+            return Response(
+                {'error': 'Неверный код подтверждения'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Если данные верны, генерируем токен
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+
+        return Response(
+            {'access': access_token, 'refresh': refresh_token},
+            status=status.HTTP_200_OK
+        )
+
+
 class UserMeViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с пользователем /me."""
 
@@ -126,12 +175,15 @@ class UserMeViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request):
         """Метод для получения информации о пользователе."""
-        serializer = UserSerializer(request.user)
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        queryset = User.objects.get(username=request.user.username)
+        serializer = UserSerializer(queryset)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def partial_update(self, request):
         """Метод для обновления информации о пользователе."""
-        # Получаем данные из запроса
+        # Получаем данные из запроса и копируем их
         data = request.data.copy()
         # Убираем роль, чтобы пользователь не мог поставить себе права
         data.pop('role')
@@ -144,11 +196,18 @@ class UserMeViewSet(viewsets.ModelViewSet):
             # Возвращаем роль пользователя
             user.role = request.user.role
             # Сохраняем изменения
-            user.save(update_fields=['first_name', 'last_name', 'email', 'bio'])
+            user.save(
+                update_fields=['first_name', 'last_name', 'email', 'bio'])
             # Возвращаем ответ
             return Response(serializer.data, status=status.HTTP_200_OK)
         # Если данные сериализатора не прошли валидацию:
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors,
+                        status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def destroy(self, request):
+        """Метод для удаления пользователя."""
+        return Response({'detail': 'Method "DELETE" not allowed.'},
+                        status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -160,38 +219,58 @@ class UserViewSet(viewsets.ModelViewSet):
     # Выводим всех пользователей
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    pagination_class = UserPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = UserFilter
 
     # Переопределяем методы
     # Создание пользователей
     def create(self, request, *args, **kwargs):
         """Метод для создания пользователя."""
         # Пробуем создать пользователя с проверкой, что он не существует
-        try:
-            return super().create(request, *args, **kwargs)
-        except IntegrityError:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        username = request.data.get('username')
+        email = request.data.get('email')
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {'error': 'Пользователь с таким username уже существует'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if User.objects.filter(email=email).exists():
+            return Response(
+                {'error': 'Пользователь с таким email уже существует'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return super().create(request, *args, **kwargs)
 
     def list(self, request, *args, **kwargs):
         """Метод для получения списка пользователей."""
         queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         # Дополнительная фильтрация по аттрибутам
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def retrieve(self, request, pk=None):
+    def retrieve(self, request, *args, **kwargs):
         """Метод для извлечения информации о пользователе."""
         queryset = self.get_queryset()
         # Находим пользователя по его id
-        user = get_object_or_404(queryset, pk=pk)
+        user = get_object_or_404(queryset, username=kwargs['pk'])
         # Возвращаем информацию о пользователе
         serializer = self.get_serializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def partial_update(self, request, pk=None):
+    def update(self, request, *args, **kwargs):
+        return Response({'detail': 'Method "PUT" not allowed.'},
+                        status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def partial_update(self, request, *args, **kwargs):
         """Метод для обновления информации о пользователе."""
         queryset = self.get_queryset()
         # Находим пользователя по его id
-        user = get_object_or_404(queryset, pk=pk)
+        user = get_object_or_404(queryset, username=kwargs['pk'])
         # Обновляем данные
         serializer = self.get_serializer(user, data=request.data, partial=True)
         # Если данные сериализатора прошли валидацию:
@@ -203,17 +282,20 @@ class UserViewSet(viewsets.ModelViewSet):
             # Сохраняем изменения
             user.save(update_fields=['first_name',
                                      'last_name',
-                                     'email','bio','role'])
+                                     'email', 'bio', 'role'])
             # Возвращаем ответ
             return Response(serializer.data, status=status.HTTP_200_OK)
         # Если данные сериализатора не прошли валидацию:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request, pk=None):
+    def destroy(self, request, *args, **kwargs):
         """Метод для удаления пользователя."""
         queryset = self.get_queryset()
         # Находим пользователя по его id
-        user = get_object_or_404(queryset, pk=pk)
+        user = get_object_or_404(queryset, username=kwargs['pk'])
         # Удаляем пользователя
+        if user == request.user:
+            return Response({'detail': 'Нельзя удалить самого себя.'},
+                            status=status.HTTP_405_METHOD_NOT_ALLOWED)
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
