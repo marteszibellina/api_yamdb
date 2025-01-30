@@ -1,5 +1,7 @@
-"""Константы для приложения `reviews`."""
+"""Константы для приложения `Review`."""
 
+MAX_NAME_LENGTH = 256
+MAX_SLUG_LENGTH = 50
 MAX_TEXT_LENGTH = 5000
 MAX_COMMENT_LENGTH = 200
 MAX_SCORE = 10
