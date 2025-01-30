@@ -17,7 +17,6 @@ from .utils import send_confirmation_email
 from .permissions import IsAdminOrSuperuser, IsUser
 
 
-
 class SignUpViewSet(viewsets.ViewSet):
     """Вьюсет для регистрации пользователей."""
 
