@@ -68,6 +68,10 @@ class User(AbstractUser):
             raise ValidationError(
                 'Пользователь с таким email уже существует')
         return value
+    
+    @property
+    def is_admin(self):
+        return self.role == ADMIN or self.is_superuser
 
     def __str__(self):
         """Возвращает username."""

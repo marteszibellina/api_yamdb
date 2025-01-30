@@ -6,7 +6,7 @@ from users.models import User
 from .constants import (MAX_TEXT_LENGTH,
                         MAX_COMMENT_LENGTH,
                         MAX_SCORE, MIN_SCORE)
-
+from .validators import validate_year
 
 # Ресурс auth: аутентификация.
 
@@ -37,13 +37,25 @@ class Title(models.Model):
     """Модель произведений."""
 
     name = models.CharField(max_length=256)
-    year = models.IntegerField()
-    description = models.TextField()
+    year = models.IntegerField(validators=[validate_year])
+    description = models.TextField(
+        max_length=255,
+        null=True,
+        blank=True,
+    )
     genre = models.ManyToManyField(Genre, through='GenreTitle')
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL,
         related_name='titles', blank=True, null=True
     )
+
+    class Meta:
+        ordering = ('name',)
+        verbose_name = 'Title'
+        verbose_name_plural = 'Titles'
+
+    def __str__(self):
+        return self.name
 
 
 class GenreTitle(models.Model):
@@ -100,6 +112,7 @@ class Reviews(models.Model):
                 name='unique_review'
             )
         ]
+
     def __str__(self):
         """Возвращает текст отзыва."""
         return self.text
