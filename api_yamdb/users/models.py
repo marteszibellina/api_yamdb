@@ -1,105 +1,83 @@
+import re
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-from django.core.validators import MaxLengthValidator
 from django.db import models
 
-from .constants import NAME_MAX_LENGTH, EMAIL_MAX_LENGTH
+from .constants import (ADMIN,
+                        MODERATOR,
+                        USER,
+                        ROLES,
+                        NAME_MAX_LENGTH,
+                        EMAIL_MAX_LENGTH)
+# from .validators import validate_username
 
 
-ADMIN = 'admin'
-MODERATOR = 'moderator'
-USER = 'user'
-ROLES = [
-    (ADMIN, 'администратор'),
-    (MODERATOR, 'модератор'),
-    (USER, 'пользователь')
-]
-
-
-def validate_username(username):
-    """Проверяем юзернейм на соответствие правилам."""
-    if username == 'me':
-        raise ValidationError(
-            'Невозможно использовать "me" в качестве никнейма.'
-        )
-    if len(username) > NAME_MAX_LENGTH:
-        raise ValidationError(
-            f'Никнейм не может превышать {NAME_MAX_LENGTH} символов.'
-        )
-    # Позже здесь будет еще одна проверка
-    # на соответствие паттерну ^[\\w.@+-]+\\Z'
-    return username
-
-
-def validate_email(email):
-    """Проверяем email на количество символов."""
-    if len(email) > EMAIL_MAX_LENGTH:
-        raise ValidationError(
-            f'Email не может превышать {EMAIL_MAX_LENGTH} символов.'
-        )
-    return email
-
-
-class CustomUser(AbstractUser):
+class User(AbstractUser):
     """Модель пользователя."""
 
-    username = models.CharField(
-        unique=True,
-        max_length=NAME_MAX_LENGTH,
-        validators=(
-            MaxLengthValidator, validate_username
-        ),
-        verbose_name='Никнейм пользователя',
-        help_text='Укажите никнейм пользователя',
-    )
-    email = models.EmailField(
-        unique=True,
-        max_length=EMAIL_MAX_LENGTH,
-        validators=(
-            MaxLengthValidator, validate_email
-        ),
-        verbose_name='Электронная почта пользователя',
-        help_text='Укажите e-mail'
-    )
-    first_name = models.CharField(
-        blank=True,
-        max_length=NAME_MAX_LENGTH,
-        validators=(MaxLengthValidator,),
-        verbose_name='Имя пользователя',
-        help_text='Укажите имя'
-    )
-    last_name = models.CharField(
-        blank=True,
-        max_length=NAME_MAX_LENGTH,
-        validators=(MaxLengthValidator,),
-        verbose_name='Фамилия пользователя',
-        help_text='Укажите фамилию'
-    )
-    bio = models.TextField(
-        blank=True,
-        verbose_name='Био пользователя',
-        help_text='Расскажите о себе',
-    )
-    role = models.TextField(
-        max_length=max(len(role[0]) for role in ROLES),
-        choices=ROLES,
-        default=USER,
-        verbose_name='Роль пользователя',
-        help_text='Укажите роль',
-    )
+    ROLE_CHOICES = ROLES
 
-    class Meta:
-        ordering = ('id',)
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'пользователи'
+    username = models.CharField(
+        'username',
+        max_length=NAME_MAX_LENGTH,
+        unique=True,
+        db_index=True,
+        # validators=[validate_username],
+        help_text='Укажите никнейм пользователя',)
+    email = models.EmailField(
+        'email',
+        max_length=EMAIL_MAX_LENGTH,
+        unique=True,
+        db_index=True,
+        help_text='Укажите e-mail',)
+    first_name = models.CharField(
+        'first name',
+        max_length=NAME_MAX_LENGTH,
+        blank=True,
+        help_text='Укажите имя пользователя',)
+    last_name = models.CharField(
+        'last name',
+        max_length=NAME_MAX_LENGTH,
+        blank=True,
+        help_text='Укажите фамилию пользователя',)
+    bio = models.TextField(
+        'bio',
+        blank=True,
+        null=True,
+        help_text='Укажите биографию пользователя',)
+    role = models.CharField(
+        'role',
+        max_length=10,
+        choices=ROLE_CHOICES,
+        default=USER,)
+    confirmation_code = models.CharField(max_length=100, blank=True, null=True)
+
+    def validate_username(self, value):
+        """Проверка на уникальность username."""
+        if self.username == 'me':
+            raise ValidationError('Нельзя использовать имя "me".')
+        pattern = r'^[\w.@+-]+$'
+        if not re.match(pattern, value):
+            raise ValidationError(
+                'Имя пользователя содержит недопустимые символы.')
+        return value
+
+    def validate_email(self, value):
+        """Проверка на уникальность email."""
+        if User.objects.filter(email=value).exists():
+            raise ValidationError(
+                'Пользователь с таким email уже существует')
+        return value
 
     def __str__(self):
+        """Возвращает username."""
         return self.username
 
-    @property
-    def is_admin_or_superuser(self):
-        return self.role == ADMIN or self.is_superuser
-
-    @property
-    def is_moderator(self):
-        return self.role == MODERATOR
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['username', 'email'],
+                name='unique_username_email'),
+        ]
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'

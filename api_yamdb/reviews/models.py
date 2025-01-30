@@ -1,14 +1,14 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from users.models import User
+
 from .constants import (MAX_TEXT_LENGTH,
                         MAX_COMMENT_LENGTH,
                         MAX_SCORE, MIN_SCORE)
 
 
 # Ресурс auth: аутентификация.
-
-# Ресурс users: пользователи.
 
 
 class Category(models.Model):
@@ -67,13 +67,13 @@ class Reviews(models.Model):
         verbose_name='Название'
     )
     # Временная модель автора, пока не реализована модель пользователей
-    author = models.IntegerField('ID автора')
+    # author = models.IntegerField('ID автора')
 
-    # author = models.ForeignKey(
-    #     'users.User',
-    #     on_delete=models.CASCADE,
-    #     verbose_name='Автор'
-    # )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор'
+    )
 
     score = models.PositiveSmallIntegerField(
         "Оценка",
@@ -115,13 +115,13 @@ class Comments(models.Model):
         verbose_name='Отзыв'
     )
     # Временная модель автора, пока не реализована модель пользователей
-    author = models.IntegerField('ID автора комментария')
+    # author = models.IntegerField('ID автора комментария')
 
-    # author = models.ForeignKey(
-    #     'users.User',
-    #     on_delete=models.CASCADE,
-    #     verbose_name='Автор комментария'
-    # )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор комментария'
+    )
 
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
