@@ -1,4 +1,4 @@
-"""Константы для приложения `reviews`."""
+"""Константы для приложения `Review`."""
 
 MAX_NAME_LENGTH = 256
 MAX_SLUG_LENGTH = 50

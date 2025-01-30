@@ -4,7 +4,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from reviews.models import (
-    Category, Genre, Title, Comments, Reviews
+    Category, Genre, Title, Comments, Review
 )
 
 
@@ -87,14 +87,14 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Reviews
+        model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date')
 
     def validate(self, data):
         """Проверяем, что отзыв только один."""
         request = self.context.get('request')
         if request.method == 'POST':
-            if Reviews.objects.filter(
+            if Review.objects.filter(
                 title_id=self.context.get('view').kwargs.get('title_id'),
                 author=request.user
             ).exists():
