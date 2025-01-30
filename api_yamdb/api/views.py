@@ -69,33 +69,52 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    """Вьюсет для отзывов"""
+    """Вьюсет для отзывов."""
 
     queryset = Reviews.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = (
-        IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly | IsAdminOrModerator)
+        IsAuthenticatedOrReadOnly,
+        IsAdminModeratorOwnerOrReadOnly
+    )
+    http_method_names = ('delete', 'get', 'patch', 'post')
+
+    def get_title(self):
+        return get_object_or_404(
+            Title,
+            pk=self.kwargs.get('title_id')
+        )
+
+    def get_queryset(self):
+        return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        """Создание отзыва с автоматическим созданием автора."""
-        # Проверка уникальности отзыва на уровне логики вьюсета
-        # Находим название произведения
-        title = serializer.validated_data['title']
-        # Проверяем, что пользователь не оставлял отзыв на это произведение
-        if Reviews.objects.filter(title=title,
-                                  author=self.request.user).exists():
-            # Если пользователь уже оставлял отзыв, то возвращаем ошибку
-            raise ValidationError('Вы уже оставляли отзыв на это произведение')
-        serializer.save(author=self.request.user)
+        serializer.save(
+            title=self.get_title(),
+            author=self.request.user
+        )
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    """Вьюсет для комментариев"""
+    """Вьюсет для комментариев."""
 
     queryset = Comments.objects.all()
     serializer_class = CommentSerializer
     permission_classes = (
-        IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly | IsAdminOrModerator)
+        IsAuthenticatedOrReadOnly,
+        IsAdminModeratorOwnerOrReadOnly
+    )
+    http_method_names = ('get', 'post', 'patch', 'delete')
+
+    def get_review(self):
+        return get_object_or_404(
+            Reviews,
+            pk=self.kwargs.get('title_id'),
+            title__id=self.kwargs.get('reviews_id')
+        )
+
+    def get_queryset(self):
+        return self.get_review().comments.all()
 
     def perform_create(self, serializer):
         """Создание комментария с автоматическим созданием автора."""
