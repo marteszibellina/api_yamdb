@@ -5,8 +5,7 @@ class IsAdminOrSuperuser(BasePermission):
     """Разрешение для администраторов и суперпользователей."""
 
     def has_permission(self, request, view):
-        return request.user.is_authenticated and (
-            request.user.is_admin or request.user.is_superuser)
+        return request.user.is_authenticated and request.user.is_admin
 
 
 class IsUser(BasePermission):
@@ -15,8 +14,5 @@ class IsUser(BasePermission):
     def has_permission(self, request, view):
         """Проверка, является ли пользователь авторизованным."""
         return (
-            request.method in SAFE_METHODS or (
-                request.user.is_authenticated
-                and request.user.is_admin_or_superuser
-            )
+            request.method in SAFE_METHODS or request.user.is_authenticated
         )

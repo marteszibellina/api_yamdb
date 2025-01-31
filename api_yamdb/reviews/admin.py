@@ -5,7 +5,6 @@ from django.contrib import admin
 from .models import Category, Comments, Genre, Review, Title
 
 
-# Пропишем поля для редактирования
 @admin.register(Title)
 class TitleAdmin(admin.ModelAdmin):
     """Title admin."""

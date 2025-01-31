@@ -92,7 +92,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для комментариев."""
 
-    # queryset = Comments.objects.all()
+    queryset = Comments.objects.all()
     serializer_class = CommentSerializer
     permission_classes = (
         IsAuthenticatedOrReadOnly,
@@ -100,11 +100,17 @@ class CommentViewSet(viewsets.ModelViewSet):
     )
     http_method_names = ('get', 'post', 'patch', 'delete')
 
+    def get_review(self):
+        return get_object_or_404(
+            Review,
+            pk=self.kwargs.get('review_id')
+        )
+
     def get_queryset(self):
-        review_id = self.kwargs.get('review_id')
-        return Comments.objects.filter(review_id=review_id)
+        return self.get_review().comments.all()
 
     def perform_create(self, serializer):
-        review_id = self.kwargs.get('review_id')
-        review = get_object_or_404(Review, id=review_id)
-        serializer.save(author=self.request.user, review=review)
+        serializer.save(
+            review=self.get_review(),
+            author=self.request.user
+        )
