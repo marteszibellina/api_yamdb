@@ -3,9 +3,9 @@ import re
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from .constants import (ADMIN, MODERATOR, USER, ROLES, NAME_MAX_LENGTH,
-                        EMAIL_MAX_LENGTH)
-from .validators import validate_username, validate_email
+from .constants import (ADMIN, EMAIL_MAX_LENGTH, MODERATOR, NAME_MAX_LENGTH,
+                        ROLES, USER)
+from .validators import validate_email, validate_username
 
 
 class User(AbstractUser):

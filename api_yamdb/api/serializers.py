@@ -3,9 +3,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from reviews.models import (
-    Category, Genre, Title, Comments, Review
-)
+from reviews.models import Category, Comments, Genre, Review, Title
 
 
 class CategorySerializer(serializers.ModelSerializer):

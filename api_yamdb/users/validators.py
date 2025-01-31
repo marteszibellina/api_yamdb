@@ -1,6 +1,8 @@
 import re
+
 from django.core.exceptions import ValidationError
-from .constants import NAME_MAX_LENGTH, EMAIL_MAX_LENGTH
+
+from .constants import EMAIL_MAX_LENGTH, NAME_MAX_LENGTH
 
 
 def validate_username(value):

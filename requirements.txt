@@ -10,6 +10,7 @@ djangorestframework==3.12.4
 djangorestframework-simplejwt==4.7.2
 idna==3.10
 iniconfig==2.0.0
+isort==6.0.0
 packaging==24.2
 pluggy==1.0.0.dev0
 py==1.11.0
@@ -22,10 +23,5 @@ requests==2.26.0
 sqlparse==0.5.3
 toml==0.10.2
 typing_extensions==4.12.2
-urllib3==1.26.20
-pytz==2024.2
-requests==2.26.0
-sqlparse==0.5.3
-toml==0.10.2
-typing_extensions==4.12.2
+tzdata==2025.1
 urllib3==1.26.20
