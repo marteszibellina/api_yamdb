@@ -7,7 +7,7 @@ from reviews.models import Category, Comments, Genre, Review, Title
 
 
 class CategorySerializer(serializers.ModelSerializer):
-
+    """Сериализатор категорий."""
     class Meta:
         fields = ('name', 'slug')
         fields = ('name', 'slug')
@@ -15,13 +15,14 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
-
+    """Сериализатор жанров."""
     class Meta:
         fields = ('name', 'slug',)
         model = Genre
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
+    """Сериализатор произведений + rating."""
     genre = GenreSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=True)
     rating = serializers.IntegerField(required=False, default=0)
@@ -34,7 +35,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-
+    """Сериализатор произведений."""
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
         slug_field='slug',
@@ -49,18 +50,6 @@ class TitleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = ('id', 'name', 'year', 'description', 'genre', 'category',)
-
-
-class TitleReadSerializer(serializers.ModelSerializer):
-    genre = GenreSerializer(many=True, read_only=True)
-    category = CategorySerializer(read_only=True)
-    rating = serializers.IntegerField(read_only=True)
-
-    class Meta:
-        model = Title
-        fields = (
-            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
-        )
 
 
 class CommentSerializer(serializers.ModelSerializer):

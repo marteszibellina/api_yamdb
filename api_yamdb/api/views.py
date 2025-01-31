@@ -18,6 +18,7 @@ class CategoryViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
+    """Вьюсет для категорий."""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -32,6 +33,7 @@ class GenreViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet
 ):
+    """Вьюсет для жанров."""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -46,7 +48,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = (
         Title.objects.all().annotate(
             rating=Avg('reviews__score')
-        ).order_by('name')
+        )
     )
     serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -97,13 +99,6 @@ class CommentViewSet(viewsets.ModelViewSet):
         IsAdminModeratorOwnerOrReadOnly
     )
     http_method_names = ('get', 'post', 'patch', 'delete')
-
-    # def get_review(self):
-    #     return get_object_or_404(
-    #         Review,
-    #         pk=self.kwargs.get('title_id'),
-    #         title__id=self.kwargs.get('reviews_id')
-    #     )
 
     def get_queryset(self):
         review_id = self.kwargs.get('review_id')
