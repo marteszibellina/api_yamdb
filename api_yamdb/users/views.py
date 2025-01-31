@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import filters, status, viewsets, permissions
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -217,6 +218,23 @@ class UserViewSet(viewsets.ModelViewSet):
     pagination_class = UserPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('=username',)
+
+    @action(
+        detail=False,
+        methods=['get', 'put', 'patch'],
+        url_path='me',
+        permission_classes=[permissions.IsAuthenticated]
+    )
+    def me(self, request):
+        """API для редактирования текущим пользователем своих данных."""
+        user = request.user
+        if request.method == 'GET':
+            serializer = self.get_serializer(user)
+            return Response(serializer.data)
+        serializer = self.get_serializer(user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(role=user.role, partial=True)
+        return Response(serializer.data)
 
     # Переопределяем методы
     # Создание пользователей
