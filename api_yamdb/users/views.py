@@ -1,16 +1,12 @@
 import secrets
 
 from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
 
-from .filters import UserFilter
 from .models import User
-from .paginators import UserPagination
 from .permissions import IsAdminOrSuperuser, IsUser
 from .serializers import SignUpSerializer, UserSerializer
 from .utils import send_confirmation_email

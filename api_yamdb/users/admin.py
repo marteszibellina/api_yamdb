@@ -22,4 +22,10 @@ class UserAdmin(admin.ModelAdmin):
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'first_name', 'last_name', 'role', 'bio')
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'role',
+            'bio')

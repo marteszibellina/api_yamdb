@@ -26,7 +26,8 @@
 #         if Review.objects.filter(title=title,
 #                                   author=self.request.user).exists():
 #             # Если пользователь уже оставлял отзыв, то возвращаем ошибку
-#             raise ValidationError('Вы уже оставляли отзыв на это произведение')
+#             raise ValidationError(
+# 'Вы уже оставляли отзыв на это произведение')
 #         serializer.save(author=self.request.user)
 
 

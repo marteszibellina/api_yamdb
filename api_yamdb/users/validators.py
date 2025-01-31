@@ -19,8 +19,6 @@ def validate_username(value):
 
 def validate_email(value):
     """Проверка email."""
-    from .models import User  # ленивый импорт
-
     if len(value) > EMAIL_MAX_LENGTH:
         raise ValidationError('Email слишком длинный.')
     return value
