@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import status, viewsets, permissions
+from rest_framework import filters, status, viewsets, permissions
 from rest_framework.response import Response
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -30,6 +30,7 @@ class SignUpViewSet(viewsets.ViewSet):
             username = serializer.validated_data['username']
             email = serializer.validated_data['email']
 
+            # Проверка на существование пользователя с таким username
             user = User.objects.filter(username=username).first()
 
             if user:
@@ -41,34 +42,36 @@ class SignUpViewSet(viewsets.ViewSet):
                         status=status.HTTP_400_BAD_REQUEST
                     )
                 # Если email совпадает, обновляем код подтверждения
-                user.confirmation_code = secrets.token_hex(16)
+                user.confirmation_code = send_confirmation_email(user.email)
                 user.save(update_fields=['confirmation_code'])
+
                 # Отправляем новый код подтверждения
-                send_confirmation_email(user.email, user.confirmation_code)
                 return Response(
                     {'message': 'Код подтверждения отправлен повторно.'},
-                    status=status.HTTP_200_OK)
+                    status=status.HTTP_200_OK
+                )
 
-            # Если пользователя с таким username нет, а почта есть
-            # Вызываем исключение
+            # Если пользователя с таким username нет
+            # Но почта уже зарегистрирована
             if User.objects.filter(email=email).exists():
                 return Response(
                     {'error': 'Такая почта уже зарегистрирована'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Создаем пользователя
+            # Создаем нового пользователя
             user = User.objects.create_user(
                 username=username,
                 email=email,
-                confirmation_code=secrets.token_hex(16)
+                confirmation_code=secrets.token_hex(16)  # Гененируем код
             )
 
             # Отправляем код подтверждения
-            send_confirmation_email(user.email, user.confirmation_code)
+            send_confirmation_email(user.email)
 
             return Response(serializer.data, status=status.HTTP_200_OK)
 
+        # Если данные не валидны
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -212,8 +215,8 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = UserPagination
-    filter_backends = (DjangoFilterBackend,)
-    filterset_class = UserFilter
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('=username',)
 
     # Переопределяем методы
     # Создание пользователей
@@ -233,17 +236,6 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         return super().create(request, *args, **kwargs)
-
-    def list(self, request, *args, **kwargs):
-        """Метод для получения списка пользователей."""
-        queryset = self.get_queryset()
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        # Дополнительная фильтрация по аттрибутам
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, *args, **kwargs):
         """Метод для извлечения информации о пользователе."""
