@@ -4,7 +4,8 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from api.constants import (MAX_COMMENT_LENGTH, MAX_NAME_LENGTH, MAX_SCORE,
-                           MAX_SLUG_LENGTH, MAX_TEXT_LENGTH, MIN_SCORE)
+                           MAX_SLUG_LENGTH, MAX_TEXT_LENGTH, MIN_SCORE,
+                           TEXT_SLICE)
 from api.validators import validate_year
 from users.models import User
 
@@ -162,4 +163,3 @@ class Comments(models.Model):
     def __str__(self):
         """Возвращает текст комментария."""
         return self.text[:TEXT_SLICE]
-
