@@ -5,7 +5,7 @@ from datetime import datetime
 
 from django.core.exceptions import ValidationError
 
-from api.constants import NAME_MAX_LENGTH, EMAIL_MAX_LENGTH
+from api.constants import EMAIL_MAX_LENGTH, NAME_MAX_LENGTH
 
 # Тесты на проверку количества символов в username и email по длине по адресу:
 # tests\test_00_user_registration.py:
