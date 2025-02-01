@@ -12,34 +12,30 @@ from .serializers import (CategorySerializer, CommentSerializer,
 from reviews.models import Category, Comments, Genre, Review, Title
 
 
-class CategoryViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
+class BaseViewSet(
+        mixins.CreateModelMixin,
+        mixins.ListModelMixin,
+        mixins.DestroyModelMixin,
+        viewsets.GenericViewSet
 ):
+    """Базовый вьюсет для CategoryViewSet и GenreViewSet."""
+
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class CategoryViewSet(BaseViewSet):
     """Вьюсет для категорий."""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
 
 
-class GenreViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
-):
+class GenreViewSet(BaseViewSet):
     """Вьюсет для жанров."""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -48,7 +44,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = (
         Title.objects.all().annotate(
             rating=Avg('reviews__score')
-        )
+        ).order_by('id')
     )
     serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -103,7 +99,8 @@ class CommentViewSet(viewsets.ModelViewSet):
     def get_review(self):
         return get_object_or_404(
             Review,
-            pk=self.kwargs.get('review_id')
+            pk=self.kwargs.get('review_id'),
+            title=self.kwargs.get('title_id')
         )
 
     def get_queryset(self):
