@@ -1,7 +1,14 @@
-"""Права доступа для пользователей."""
+"""Права доступа для пользователей приложений reviews и users."""
 
 from rest_framework import permissions
 from rest_framework.permissions import SAFE_METHODS, BasePermission
+
+
+class IsAdmin(BasePermission):
+    """Разрешение для администраторов и суперпользователей."""
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.is_admin
 
 
 class IsAdminOrReadOnly(BasePermission):

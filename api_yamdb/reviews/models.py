@@ -3,10 +3,10 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from .constants import (MAX_COMMENT_LENGTH, MAX_NAME_LENGTH, MAX_SCORE,
-                        MAX_SLUG_LENGTH, MAX_TEXT_LENGTH, MIN_SCORE)
+from api.constants import (MAX_COMMENT_LENGTH, MAX_NAME_LENGTH, MAX_SCORE,
+                           MAX_SLUG_LENGTH, MAX_TEXT_LENGTH, MIN_SCORE)
+from api.validators import validate_year
 from users.models import User
-from .validators import validate_year
 
 
 class CategoryGenreBaseModel(models.Model):
