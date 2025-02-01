@@ -58,7 +58,7 @@ class Title(models.Model):
     )
     description = models.TextField(blank=True, verbose_name='Описание')
     genre = models.ManyToManyField(
-        Genre, through='GenreTitle', verbose_name='Жанр'
+        Genre, verbose_name='Жанр'
     )
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL,
@@ -72,24 +72,6 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
-
-
-class GenreTitle(models.Model):
-    """Модель жанров и произведений (многие ко многим)."""
-
-    genre = models.ForeignKey(
-        Genre, on_delete=models.CASCADE, verbose_name='Жанр'
-    )
-    title = models.ForeignKey(
-        Title, on_delete=models.CASCADE, verbose_name='Произведение'
-    )
-
-    class Meta:
-        verbose_name = 'Связанные жанр - произведение'
-        verbose_name_plural = 'Связанные жанры - произведения'
-
-    def __str__(self):
-        return f'{self.title} - {self.genre}'
 
 
 class Review(models.Model):
@@ -182,3 +164,4 @@ class Comments(models.Model):
     def __str__(self):
         """Возвращает текст комментария."""
         return self.text[:TEXT_SLICE]
+
