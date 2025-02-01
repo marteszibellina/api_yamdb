@@ -1,6 +1,6 @@
 import django_filters
 
-from .models import User
+from users.models import User
 
 
 class UserFilter(django_filters.FilterSet):

@@ -1,10 +1,11 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 
-from .models import User
+from users.models import User
 
 
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin):
+class UserAdmin(UserAdmin):  # переопределим UserAdmin
     """User admin."""
 
     list_display = (
@@ -20,12 +21,9 @@ class UserAdmin(admin.ModelAdmin):
     list_filter = ('username', 'email', 'role')
     empty_value_display = '-пусто-'
 
-    class Meta:
-        model = User
-        fields = (
-            'username',
-            'email',
-            'first_name',
-            'last_name',
-            'role',
-            'bio')
+    fieldsets = UserAdmin.fieldsets + (
+        (None, {'fields': ('bio', 'role')}),
+    )
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        (None, {'fields': ('bio', 'role')}),
+    )
