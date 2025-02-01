@@ -8,6 +8,7 @@ from .constants import (MAX_COMMENT_LENGTH, MAX_NAME_LENGTH, MAX_SCORE,
 from users.models import User
 from .validators import validate_year
 
+
 class CategoryGenreBaseModel(models.Model):
     """Базовая модель для категорий и жанров."""
 
