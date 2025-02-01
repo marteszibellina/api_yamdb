@@ -2,23 +2,22 @@ import re
 
 from django.core.exceptions import ValidationError
 
-from .constants import EMAIL_MAX_LENGTH, NAME_MAX_LENGTH
-
 
 def validate_username(value):
     """Проверка username."""
-    if len(value) > NAME_MAX_LENGTH:
-        raise ValidationError('Имя пользователя слишком длинное.')
     if value.lower() == 'me':
         raise ValidationError('Имя "me" запрещено.')
-    if not re.match(r'^[\w.@+-]+$', value):
+    # Работа с недопустимыми символами
+    invalid_chars = re.sub(r'[\w.@+-]', '', value)
+    if invalid_chars:
         raise ValidationError(
-            'Имя пользователя содержит недопустимые символы.')
+            f'Имя пользователя содержит недопустимые символы {invalid_chars}.'
+        )
     return value
 
 
 def validate_email(value):
     """Проверка email."""
-    if len(value) > EMAIL_MAX_LENGTH:
-        raise ValidationError('Email слишком длинный.')
+    if '@' not in value:
+        raise ValidationError('Некорректная почта.')
     return value
