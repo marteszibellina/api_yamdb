@@ -1,11 +1,11 @@
-from django.contrib.auth import get_user_model
+"""Модель отзывов."""
+
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from .constants import (MAX_COMMENT_LENGTH, MAX_NAME_LENGTH, MAX_SCORE,
                         MAX_SLUG_LENGTH, MAX_TEXT_LENGTH, MIN_SCORE)
-
-User = get_user_model()
+from users.models import User
 
 
 class Category(models.Model):

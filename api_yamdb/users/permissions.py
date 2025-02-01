@@ -1,18 +1,10 @@
-from rest_framework.permissions import SAFE_METHODS, BasePermission
+"""Права доступа для пользователей."""
+
+from rest_framework.permissions import BasePermission
 
 
-class IsAdminOrSuperuser(BasePermission):
+class IsAdmin(BasePermission):
     """Разрешение для администраторов и суперпользователей."""
 
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.is_admin
-
-
-class IsUser(BasePermission):
-    """Разрешение для пользователей."""
-
-    def has_permission(self, request, view):
-        """Проверка, является ли пользователь авторизованным."""
-        return (
-            request.method in SAFE_METHODS or request.user.is_authenticated
-        )
