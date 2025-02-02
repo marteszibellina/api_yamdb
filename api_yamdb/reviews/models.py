@@ -4,8 +4,8 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from reviews.constants import (MAX_COMMENT_LENGTH, MAX_NAME_LENGTH, MAX_SCORE,
-                               MAX_SLUG_LENGTH, MAX_TEXT_LENGTH, MIN_SCORE,
+from reviews.constants import (MAX_NAME_LENGTH, MAX_SCORE,
+                               MAX_SLUG_LENGTH, MIN_SCORE,
                                TEXT_SLICE)
 from reviews.validators import validate_year
 
@@ -79,7 +79,6 @@ class Review(models.Model):
     """Модель отзывов."""
 
     text = models.TextField(
-        max_length=MAX_TEXT_LENGTH,
         verbose_name='Текст',
         help_text='Текст отзыва'
     )
@@ -136,7 +135,6 @@ class Comments(models.Model):
     """Модель комментариев."""
 
     text = models.TextField(
-        max_length=MAX_COMMENT_LENGTH,
         verbose_name='Текст',
         help_text='Текст комментария'
     )

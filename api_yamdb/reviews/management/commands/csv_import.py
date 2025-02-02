@@ -1,6 +1,7 @@
 """Модуль для импорта csv-файлов в базу данных."""
 
-import csv
+# import csv
+from csv import DictReader
 from pathlib import Path
 
 from django.conf import settings
@@ -13,141 +14,94 @@ User = get_user_model()
 
 
 class Command(BaseCommand):
-    """Команда для импорта csv-файлов в базу данных."""
-    help = 'Импорт сsv-файлов в базу данных'
+    """
+    Команда для импорта данных из csv-файлов в базу данных:
+    управление на python.py csv_import
 
-    def handle_users(self, *args, **kwargs):
-        """Функция для импорта csv-файлов users в базу данных."""
-        with open(
-            Path(settings.BASE_DIR) / 'static/data/users.csv', 'r',
-            encoding='utf-8'
-        ) as csv_file:
-            for row in csv.DictReader(csv_file):
-                User.objects.create(
-                    id=row['id'],
-                    username=row['username'],
-                    email=row['email'],
-                    role=row['role'],
-                    bio=row['bio'],
-                    first_name=row['first_name'],
-                    last_name=row['last_name'],
-                )
+    Если вам нужно обновить базу данных:
+    1) Удалите db.sqlite3
+    2) Выполните миграцию (python manage.py migrate --run-syncdb).
 
-    def handle_category(self, *args, **kwargs):
-        """Функция для импорта csv-файлов category в базу данных."""
-        with open(
-            Path(settings.BASE_DIR) / 'static/data/category.csv', 'r',
-            encoding='utf-8'
-        ) as csv_file:
-            for row in csv.DictReader(csv_file):
-                Category.objects.create(
-                    id=row['id'],
-                    name=row['name'],
-                    slug=row['slug'],
-                )
+    Появится новая пустая база данных.
+    """
+    help = "Loading data from csv files."
 
-    def handle_comments(self, *args, **kwargs):
-        """Функция для импорта csv-файлов comments в базу данных."""
-        with open(
-            Path(settings.BASE_DIR) / 'static/data/comments.csv', 'r',
-            encoding='utf-8'
-        ) as csv_file:
-            for row in csv.DictReader(csv_file):
-                # Проверка наличия связанных записей в User и Review
-                if User.objects.filter(
-                    id=row['author']).exists() and Review.objects.filter(
-                        id=row['review_id']).exists():
-                    Comments.objects.create(
-                        id=row['id'],
-                        review_id=row['review_id'],
-                        text=row['text'],
-                        author_id=row['author'],
-                        pub_date=row['pub_date'],
-                    )
-                else:
-                    print(
-                        f'Skipping comment {row["id"]}',
-                        ' - related User or Review does not exist.',
-                    )
+    def handle(self, *args, **options):
 
-    def handle_genre_title(self, *args, **kwargs):
-        """Функция для импорта csv-файлов genre_title в базу данных."""
-        with open(
-            Path(settings.BASE_DIR) / 'static/data/genre_title.csv', 'r',
-            encoding='utf-8'
-        ) as csv_file:
-            for row in csv.DictReader(csv_file):
-                try:
-                    title = Title.objects.get(id=row['title_id'])
-                    genre = Genre.objects.get(id=row['genre_id'])
+        for row in DictReader(
+                open(Path(settings.BASE_DIR) / 'static/data/category.csv',
+                     encoding='utf-8')):
+            category = Category(
+                id=row['id'],
+                name=row['name'],
+                slug=row['slug']
+            )
+            category.save()
 
-                    # Добавляем Genre к Title
-                    title.genres.add(genre)
+        for row in DictReader(
+                open(Path(settings.BASE_DIR) / 'static/data/genre.csv',
+                     encoding='utf-8')):
+            genre = Genre(
+                id=row['id'],
+                name=row['name'],
+                slug=row['slug'],
+            )
+            genre.save()
 
-                except Title.DoesNotExist:
-                    print(f"Title with id {row['title_id']} does not exist.")
-                except Genre.DoesNotExist:
-                    print(f"Genre with id {row['genre_id']} does not exist.")
+        for row in DictReader(
+                open(Path(settings.BASE_DIR) / 'static/data/titles.csv',
+                     encoding='utf-8')):
+            title = Title(
+                id=row['id'],
+                name=row['name'],
+                year=row['year'],
+                category_id=row['category'],
+            )
+            title.save()
 
-    def handle_genre(self, *args, **kwargs):
-        """Функция для импорта csv-файлов genre в базу данных."""
-        with open(
-            Path(settings.BASE_DIR) / 'static/data/genre.csv', 'r',
-            encoding='utf-8'
-        ) as csv_file:
-            for row in csv.DictReader(csv_file):
-                Genre.objects.create(
-                    id=row['id'],
-                    name=row['name'],
-                    slug=row['slug'],
-                )
+        for row in DictReader(
+                open(Path(settings.BASE_DIR) / 'static/data/users.csv',
+                     encoding='utf-8')):
+            user = User(
+                id=row['id'],
+                username=row['username'],
+                email=row['email'],
+                role=row['role'],
+                bio=row['bio'],
+                first_name=row['first_name'],
+                last_name=row['last_name'],
+            )
+            user.save()
 
-    def handle_review(self, *args, **kwargs):
-        """Функция для импорта csv-файлов review в базу данных."""
-        with open(
-            Path(settings.BASE_DIR) / 'static/data/review.csv', 'r',
-            encoding='utf-8'
-        ) as csv_file:
-            for row in csv.DictReader(csv_file):
-                try:
-                    # Проверяем, существует ли пользователь и заголовок
-                    author = User.objects.get(id=row['author'])
-                    title = Title.objects.get(id=row['title_id'])
+        for row in DictReader(
+                open(Path(settings.BASE_DIR) / 'static/data/review.csv',
+                     encoding='utf-8')):
+            review = Review(
+                id=row['id'],
+                title_id=row['title_id'],
+                text=row['text'],
+                author_id=row['author'],
+                score=row['score'],
+                pub_date=row['pub_date'],
+            )
+            review.save()
 
-                    # Создаем отзыв
-                    Review.objects.create(
-                        id=row['id'],
-                        text=row['text'],
-                        score=row['score'],
-                        pub_date=row['pub_date'],
-                        author=author,
-                        title=title,
-                    )
+        for row in DictReader(
+                open(Path(settings.BASE_DIR) / 'static/data/comments.csv',
+                     encoding='utf-8')):
+            comments = Comments(
+                id=row['id'],
+                review_id=row['review_id'],
+                text=row['text'],
+                author_id=row['author'],
+                pub_date=row['pub_date'],
+            )
+            comments.save()
 
-                except User.DoesNotExist:
-                    print(f'User with id {row["author"]} does not exist.')
-                except Title.DoesNotExist:
-                    print(f'Title with id {row["title_id"]} does not exist.')
-
-    def handle_titles(self, *args, **kwargs):
-        """Функция для импорта csv-файлов titles в базу данных."""
-        with open(
-            Path(settings.BASE_DIR) / 'static/data/titles.csv', 'r',
-            encoding='utf-8'
-        ) as csv_file:
-            for row in csv.DictReader(csv_file):
-                Title.objects.create(
-                    id=row['id'],
-                    name=row['name'],
-                    year=row['year'],
-                    category_id=row['category'],
-                )
-
-    def handle(self, *args, **kwargs):
-        self.handle_users()
-        self.handle_category()
-        self.handle_comments()
-        self.handle_genre_title()
-        self.handle_genre()
-        self.handle_review()
-        self.handle_titles()
+        for row in DictReader(
+                open(Path(settings.BASE_DIR) / 'static/data/genre_title.csv',
+                     encoding='utf-8')
+        ):
+            genre = Genre.objects.get(id=row['genre_id'])
+            title = Title.objects.get(id=row['title_id'])
+            title.genre.add(genre)

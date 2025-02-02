@@ -123,8 +123,7 @@ class SignUpViewSet(viewsets.ViewSet):
         # Если данные валидны
         serializer.is_valid(raise_exception=True)
         serializer.create(serializer.validated_data)
-        # serializer.send_email(serializer.validated_data['email'])
-        serializer.save()
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
