@@ -16,8 +16,8 @@ def validate_username(value):
     return value
 
 
-def validate_email(value):
-    """Проверка email."""
-    if '@' not in value:
-        raise ValidationError('Некорректная почта.')
-    return value
+# def validate_email(value):
+#     """Проверка email."""
+#     if '@' not in value:
+#         raise ValidationError('Некорректная почта.')
+#     return value

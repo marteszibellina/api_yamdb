@@ -1,11 +1,11 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 from users.models import User
 
 
 @admin.register(User)
-class UserAdmin(UserAdmin):  # переопределим UserAdmin
+class CustonUserAdmin(BaseUserAdmin):
     """User admin."""
 
     list_display = (
@@ -21,9 +21,11 @@ class UserAdmin(UserAdmin):  # переопределим UserAdmin
     list_filter = ('username', 'email', 'role')
     empty_value_display = '-пусто-'
 
-    fieldsets = UserAdmin.fieldsets + (
+    fieldsets = BaseUserAdmin.fieldsets + (
         (None, {'fields': ('bio', 'role')}),
     )
-    add_fieldsets = UserAdmin.add_fieldsets + (
+    add_fieldsets = BaseUserAdmin.add_fieldsets + (
         (None, {'fields': ('bio', 'role')}),
     )
+
+    ordering = ('username',)

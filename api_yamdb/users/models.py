@@ -6,7 +6,7 @@ from django.db import models
 
 from users.constants import (CONFIRMATION_CODE_LENGTH, EMAIL_MAX_LENGTH,
                              NAME_MAX_LENGTH, Role)
-from users.validators import validate_email, validate_username
+from users.validators import validate_username
 
 
 class User(AbstractUser):
@@ -23,7 +23,6 @@ class User(AbstractUser):
         'email',
         max_length=EMAIL_MAX_LENGTH,
         unique=True,
-        validators=[validate_email],
         help_text='Укажите e-mail'
     )
     bio = models.TextField('bio', blank=True)
@@ -32,21 +31,13 @@ class User(AbstractUser):
         max_length=max(len(Role.name) for Role in Role),  # Автодлина
         choices=Role.choices,  # Выбор из кортежа
         default=Role.USER)  # Значение по умолчанию
-    confirmation_code = models.CharField(
-        max_length=CONFIRMATION_CODE_LENGTH,
-        blank=True,
-        null=True)
 
-    # Метод для генерации confirmation_code
-    @property
-    def generate_confirmation_code(self):
-        """Генерирует код с использованием default_token_generator."""
-        return default_token_generator.make_token(self)  # было сложно
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
-    # Метод для проверки confirmation_code
-    def check_confirmation_code(self, code):
-        """Проверяет код с использованием default_token_generator."""
-        return default_token_generator.check_token(self, code)  # было проще
+    def __str__(self):
+        return f'user: {self.username} email: {self.email}'
 
     # Методы для проверки ролей
     # Добавим is_superuser и is_staff, а Role.ADMIN возьмём из модели Roles
@@ -60,10 +51,13 @@ class User(AbstractUser):
         """Проверяет, является ли пользователь модератором."""
         return self.role == Role.MODERATOR
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['username', 'email'],
-                                    name='unique_username_email')
-        ]
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
+    # Метод для генерации confirmation_code
+    @property
+    def generate_confirmation_code(self):
+        """Генерирует код с использованием default_token_generator."""
+        return default_token_generator.make_token(self)  # было сложно
+
+    # Метод для проверки confirmation_code
+    def check_confirmation_code(self, code):
+        """Проверяет код с использованием default_token_generator."""
+        return default_token_generator.check_token(self, code)  # было проще
