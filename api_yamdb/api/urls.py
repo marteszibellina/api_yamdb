@@ -1,9 +1,11 @@
+"""URLs для приложения api, работающая с Reviews и Users."""
+
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from api.views import (CategoryViewSet, CommentViewSet, GenreViewSet,
-                       ReviewViewSet, TitleViewSet)
-from users.views import SignUpViewSet, UserViewSet, token_obtain_view
+                       ReviewViewSet, SignUpViewSet, TitleViewSet, UserViewSet,
+                       token_obtain_view)
 
 router_v1 = DefaultRouter()  # Роутер API v1
 
