@@ -95,7 +95,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
     """Сериализатор произведений + rating."""
     genre = GenreSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=True)
-    rating = serializers.IntegerField(required=False, default=None)
+    rating = serializers.IntegerField(read_only=True, default=None)
 
     class Meta:
         model = Title
@@ -156,12 +156,11 @@ class ReviewSerializer(serializers.ModelSerializer):
     def validate(self, data):
         """Проверяем, что отзыв только один."""
         request = self.context.get('request')
-        if request.method == 'POST':
-            if Review.objects.filter(
-                title_id=self.context.get('view').kwargs.get('title_id'),
-                author=request.user
-            ).exists():
-                raise ValidationError(
-                    'Вы уже писали отзыв на данное произведение.'
-                )
+        if request.method == 'POST' and Review.objects.filter(
+            title_id=self.context.get('view').kwargs.get('title_id'),
+            author=request.user
+        ).exists():
+            raise ValidationError(
+                'Вы уже писали отзыв на данное произведение.'
+            )
         return data
