@@ -1,13 +1,19 @@
 """Модель отзывов."""
 
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.contrib.auth import get_user_model
 from django.db import models
 
-from api.constants import (MAX_COMMENT_LENGTH, MAX_NAME_LENGTH, MAX_SCORE,
-                           MAX_SLUG_LENGTH, MAX_TEXT_LENGTH, MIN_SCORE,
-                           TEXT_SLICE)
-from api.validators import validate_year
-from users.models import User
+from reviews.constants import (MAX_COMMENT_LENGTH,
+                               MAX_NAME_LENGTH,
+                               MAX_SCORE,
+                               MAX_SLUG_LENGTH,
+                               MAX_TEXT_LENGTH,
+                               MIN_SCORE,
+                               TEXT_SLICE)
+from reviews.validators import validate_year
+
+User = get_user_model()
 
 
 class CategoryGenreBaseModel(models.Model):
@@ -51,7 +57,7 @@ class Title(models.Model):
     name = models.CharField(
         max_length=MAX_NAME_LENGTH, verbose_name='Название'
     )
-    year = models.PositiveSmallIntegerField(
+    year = models.IntegerField(
         verbose_name='Год выпуска',
         validators=(validate_year,)
     )

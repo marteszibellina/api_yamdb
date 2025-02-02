@@ -4,9 +4,8 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.tokens import default_token_generator
 from django.db import models
 
-from api.constants import (EMAIL_MAX_LENGTH,
-                           NAME_MAX_LENGTH, Role)
-from api.validators import validate_username
+from users.constants import EMAIL_MAX_LENGTH, NAME_MAX_LENGTH, Role
+from users.validators import validate_username
 
 
 class User(AbstractUser):

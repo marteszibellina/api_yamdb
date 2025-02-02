@@ -1,4 +1,6 @@
 """Вьюсеты для работы с моделями приложений reviews и users."""
+
+from django.contrib.auth import get_user_model
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -7,7 +9,6 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
-# from rest_framework_simplejwt.tokens import RefreshToken
 
 from api.filters import TitleFilter
 from api.permissions import (IsAdmin, IsAdminModeratorOwnerOrReadOnly,
@@ -17,10 +18,11 @@ from api.serializers import (CategorySerializer, CommentSerializer,
                              SignUpSerializer, TitleReadSerializer,
                              TitleSerializer, TokenObtainSerializer,
                              UserSerializer)
-# from api.utils import send_confirmation_email
+
 from api.viewset import CategoryGenreViewSet
 from reviews.models import Category, Comments, Genre, Review, Title
-from users.models import User
+
+User = get_user_model()
 
 
 class CategoryViewSet(CategoryGenreViewSet):

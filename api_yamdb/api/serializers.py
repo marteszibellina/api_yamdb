@@ -3,17 +3,17 @@
 import re
 
 from django.shortcuts import get_object_or_404
-
+from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework_simplejwt.tokens import AccessToken
 
 from api.utils import send_confirmation_email
-# from api.validators import validate_email, validate_username
-from api.constants import NAME_MAX_LENGTH, EMAIL_MAX_LENGTH
+from users.constants import NAME_MAX_LENGTH, EMAIL_MAX_LENGTH
 from reviews.models import Category, Comments, Genre, Review, Title
-from users.models import User
+
+User = get_user_model()
 
 
 class SignUpSerializer(serializers.Serializer):
@@ -42,7 +42,7 @@ class SignUpSerializer(serializers.Serializer):
         invalid_chars = re.sub(r'[\w.@+-]', '', username)
         if invalid_chars:
             raise serializers.ValidationError(
-                {f'Недопустимые символы в имени пользователя {invalid_chars}.'})
+                {f'Недопустимые символы в username {invalid_chars}.'})
 
         # Проверка, что почта соответствует требованиям
         if len(email) > EMAIL_MAX_LENGTH:
