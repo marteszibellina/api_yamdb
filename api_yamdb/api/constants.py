@@ -20,7 +20,3 @@ class Role(models.TextChoices):
     ADMIN = 'admin', 'Администратор'
     MODERATOR = 'moderator', 'Модератор'
     USER = 'user', 'Пользователь'
-
-
-# Кортеж ролей
-ROLES = Role.choices
