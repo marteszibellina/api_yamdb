@@ -18,7 +18,6 @@ from api.serializers import (CategorySerializer, CommentSerializer,
                              SignUpSerializer, TitleReadSerializer,
                              TitleSerializer, TokenObtainSerializer,
                              UserSerializer)
-
 from api.viewset import CategoryGenreViewSet
 from reviews.models import Category, Comments, Genre, Review, Title
 

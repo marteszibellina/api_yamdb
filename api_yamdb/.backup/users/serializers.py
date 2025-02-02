@@ -1,16 +1,16 @@
 """Сериализаторы для пользователей."""
 import re
 
-from django.shortcuts import get_object_or_404
 from django.contrib.auth.tokens import default_token_generator
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
 from rest_framework_simplejwt.tokens import AccessToken
 
+# from users.validators import validate_username
+from users.constants import EMAIL_MAX_LENGTH, NAME_MAX_LENGTH
 from users.models import User
 from users.utils import send_confirmation_email
-# from users.validators import validate_username
-from users.constants import NAME_MAX_LENGTH, EMAIL_MAX_LENGTH
 
 
 class SignUpSerializer(serializers.Serializer):

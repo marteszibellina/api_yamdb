@@ -1,11 +1,11 @@
 """Модуль для импорта csv-файлов в базу данных."""
 
 import csv
+from pathlib import Path
 
 from django.conf import settings
-from pathlib import Path
-from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
 
 from reviews.models import Category, Comments, Genre, Review, Title
 

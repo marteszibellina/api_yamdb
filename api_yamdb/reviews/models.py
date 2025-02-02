@@ -1,15 +1,11 @@
 """Модель отзывов."""
 
-from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.auth import get_user_model
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from reviews.constants import (MAX_COMMENT_LENGTH,
-                               MAX_NAME_LENGTH,
-                               MAX_SCORE,
-                               MAX_SLUG_LENGTH,
-                               MAX_TEXT_LENGTH,
-                               MIN_SCORE,
+from reviews.constants import (MAX_COMMENT_LENGTH, MAX_NAME_LENGTH, MAX_SCORE,
+                               MAX_SLUG_LENGTH, MAX_TEXT_LENGTH, MIN_SCORE,
                                TEXT_SLICE)
 from reviews.validators import validate_year
 

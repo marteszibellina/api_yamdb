@@ -2,16 +2,16 @@
 
 import re
 
-from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework_simplejwt.tokens import AccessToken
 
 from api.utils import send_confirmation_email
-from users.constants import NAME_MAX_LENGTH, EMAIL_MAX_LENGTH
 from reviews.models import Category, Comments, Genre, Review, Title
+from users.constants import EMAIL_MAX_LENGTH, NAME_MAX_LENGTH
 
 User = get_user_model()
 

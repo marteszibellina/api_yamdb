@@ -12,6 +12,7 @@ from users.models import User
 from users.permissions import IsAdmin
 from users.serializers import (SignUpSerializer, TokenObtainSerializer,
                                UserSerializer)
+
 # from users.utils import send_confirmation_email
 
 
