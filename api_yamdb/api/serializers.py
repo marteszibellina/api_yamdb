@@ -36,18 +36,31 @@ class SignUpSerializer(serializers.Serializer):
         user_username = User.objects.filter(username=username).first()
         user_email = User.objects.filter(email=email).first()
 
-        if user_username != user_email:
-            # Если email зарегистрирован, а username не зарегистрирован
-            if user_email and not user_username:
-                raise serializers.ValidationError(
-                    {'error': 'Этот email уже есть с другим username'}
-                )
+        # Реализация вывода сообещния об ошибке, если оба поля
+        # username и email зарегистрированы в БД, но под разными людьми
 
-            # Если username зарегистрирован, а email не зарегистрирован
-            if user_username and not user_email:
-                raise serializers.ValidationError(
-                    {'error': 'Этот username уже есть с другим email'}
-                )
+        # Словарь ошибок
+        errors = {}
+
+        # Шаблон ошибки
+        error_template = 'Пользователь с таким {field_name} уже существует'
+
+        # Формируем список полей и их значений
+        field_names = ['email', 'username']
+        field_values = [user_email, user_username]
+
+        # Если username и email не совпадают
+        if user_email != user_username:
+            # Формируем словарь ошибок через dict comprehension
+            errors = {
+                field: [error_template.format(field_name=field)]
+                for field, value in zip(field_names, field_values)
+                if value
+            }
+
+            # Если ошибки есть, генерируем ValidationError
+            if errors:
+                raise serializers.ValidationError(errors)
 
         return attrs
 
@@ -190,7 +203,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         if request.method == 'POST' and Review.objects.filter(
             title_id=self.context.get('view').kwargs.get('title_id'),
             author=request.user
-        ).exists():
+        ).first():
             raise ValidationError(
                 'Вы уже писали отзыв на данное произведение.'
             )
